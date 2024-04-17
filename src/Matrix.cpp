@@ -39,7 +39,7 @@ Matrix<T>::Matrix(const std::string &content) : Matrix()
 			std::cerr << "Invalid matrix format" << std::endl;
 			return;
 		}
-		futures.push_back(std::async(std::launch::async, [this, rowStr, &i]() {
+		futures.push_back(std::async(std::launch::async, [this, rowStr, i]() {
 			std::istringstream rowStream(rowStr);
 			std::string cell;
 			int j = 0;
@@ -50,8 +50,8 @@ Matrix<T>::Matrix(const std::string &content) : Matrix()
 				rawData[i][j] = value;
 				j++;
 			}
-			i++;
 		}));
+		i++;
 	}
 
 	for (auto& future : futures) {
