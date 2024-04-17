@@ -53,7 +53,6 @@ class Matrix
     static void getTriangle(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 	static void getTransposed(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 
-
 	// Splits the matrix into even chunks and performs given 'operation' on each chunk using multithreading
 	// this - first operand
 	// other - second operand
@@ -66,6 +65,7 @@ class Matrix
     Matrix threadedMatrixOperation(const Matrix& args, const Matrix& other, ThreadedFunction operation, Dimensions resultSize = {0,0}) const;
 
 	// https://en.wikipedia.org/wiki/Gaussian_elimination#Pseudocode
+	// returns copy of concatenated matrix A and b in row echelon form
 	static Matrix gaussianElimination(const Matrix& A, const Matrix& b);
 
 public:
@@ -91,7 +91,6 @@ public:
 
 	Matrix transpose() const;
 
-
 	Matrix& operator=(const Matrix& other);
 	Matrix& operator=(Matrix&& other) noexcept;
 
@@ -111,10 +110,5 @@ public:
 	T& operator[](Dimensions indecies);
 	bool operator==(const Matrix& other);
 	bool operator!=(const Matrix& other);
-
-	
-
-
-	
 };
 

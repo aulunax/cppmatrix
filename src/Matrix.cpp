@@ -516,8 +516,6 @@ Matrix<T> Matrix<T>::gaussianElimination(const Matrix &A, const Matrix &b)
 	Ab.print();
 #endif
 	}
-
-
     return Ab;
 }
 
@@ -525,7 +523,7 @@ template <typename T>
 Matrix<T> Matrix<T>::operator/(const Matrix &other) const
 {
 #ifdef MATRIX_DEBUG
-	std::cout << "Starting Matrix<T>::operator|(const Matrix &other)\n\n";
+	std::cout << "Starting Matrix<T>::operator/(const Matrix &other)\n\n";
 #endif
 
 	// transpose xA = b into  A^T * x^T = b^t
@@ -542,6 +540,7 @@ Matrix<T> Matrix<T>::operator|(const Matrix &other) const
 
 #ifdef MATRIX_DEBUG
 	std::cout << "Starting Matrix<T>::operator|(const Matrix &other)\n\n";
+	auto startTime = std::chrono::high_resolution_clock::now();
 #endif
 
 	Matrix<T> gaussianResult = gaussianElimination((*this), other);
@@ -581,6 +580,11 @@ Matrix<T> Matrix<T>::operator|(const Matrix &other) const
 		x[{i, 0}] /= gaussianResult[{i, i}];
 	}
 
+#ifdef MATRIX_DEBUG
+	auto endTime = std::chrono::high_resolution_clock::now();
+	auto duration = Duration(endTime - startTime);
+	std::cout << "Matrix<T>::operator|(const Matrix &other) finished in " << duration.count()/1000.0 << " miliseconds.\n\n";
+#endif
 	return x;
 }
 
