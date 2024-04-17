@@ -35,7 +35,7 @@ Matrix<T>::Matrix(const std::string &content) : Matrix()
 		}
 		else if (m != size.m) { 	// check for correct number of commas
 			size = {0,0};
-			rawData = std::vector<std::vector<T>>(); 
+			rawData = Data(); 
 			std::cerr << "Invalid matrix format" << std::endl;
 			return;
 		}
@@ -133,7 +133,7 @@ template <typename T>
 void Matrix<T>::reserve(int n, int m)
 {
 	size = {n,m};
-	rawData = std::vector<std::vector<T>>(n, std::vector<T>(m));
+	rawData = Data(n, std::vector<T>(m));
 }
 
 template <typename T>
@@ -145,7 +145,7 @@ void Matrix<T>::fill(int n, int m, T value)
 #endif
 
 	size = {n,m};
-	rawData = std::vector<std::vector<T>>(n, std::vector<T>(m, value));
+	rawData = Data(n, std::vector<T>(m, value));
 	
 #ifdef MATRIX_DEBUG
 	auto endTime = std::chrono::high_resolution_clock::now();
@@ -161,17 +161,23 @@ Matrix<T> Matrix<T>::diag(int k) const
 #ifdef MATRIX_DEBUG
 	std::cout << "Starting Matrix<T>::diag(int k) \n";
 #endif
-	Matrix<T> args = Matrix<T>(1, 1, k);
+	if (size.m != size.n) {
+		throw NotSquareMatrixException();
+	}
 
-	return threadedMatrixOperation(args, &getDiagonal);
+	Matrix<T> args = Matrix<T>(1, 1, k);
+	Matrix<T> other;
+
+	return threadedMatrixOperation(args, other, &getDiagonal);
 }
 
 template <typename T>
-void Matrix<T>::getDiagonal(const std::vector<std::vector<T>> &data1, const std::vector<std::vector<T>> &data2, std::vector<std::vector<T>> &result, int startRow, int endRow)
+void Matrix<T>::getDiagonal(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow)
 {
+	int diagonal = args[0][0];
 	for (int i = startRow; i < endRow; i++) {
 		for (int j = 0; j < data1[0].size(); j++) {
-			if (i+data2[0][0] == j) 
+			if (i+diagonal == j) 
 				result[i][j] = data1[i][j];
 			else
 				result[i][j] = 0;
@@ -185,11 +191,17 @@ Matrix<T> Matrix<T>::tril(int k) const
 #ifdef MATRIX_DEBUG
 	std::cout << "Starting Matrix<T>::tril(int k) \n";
 #endif
+	if (size.m != size.n) {
+		throw NotSquareMatrixException();
+	}
+
     Matrix<T> args = Matrix<T>(1,2);
 	args[{0,0}] = k;
 	args[{0,1}] = -1;
 
-	return threadedMatrixOperation(args, &getTriangle);
+	Matrix<T> other;
+
+	return threadedMatrixOperation(args, other, &getTriangle);
 }
 
 template <typename T>
@@ -198,18 +210,24 @@ Matrix<T> Matrix<T>::triu(int k) const
 #ifdef MATRIX_DEBUG
 	std::cout << "Starting Matrix<T>::triu(int k) \n";
 #endif
+	if (size.m != size.n) {
+		throw NotSquareMatrixException();
+	}
+
     Matrix<T> args = Matrix<T>(1,2);
 	args[{0,0}] = k;
 	args[{0,1}] = 1;
 
-	return threadedMatrixOperation(args, &getTriangle);
+	Matrix<T> other;
+
+	return threadedMatrixOperation(args, other, &getTriangle);
 }
 
 template <typename T>
-void Matrix<T>::getTriangle(const std::vector<std::vector<T>> &data1, const std::vector<std::vector<T>> &data2, std::vector<std::vector<T>> &result, int startRow, int endRow)
+void Matrix<T>::getTriangle(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow)
 {
-	int direction = data2[0][1];
-	int k = data2[0][0];
+	int direction = args[0][1];
+	int k = args[0][0];
 	for (int i = startRow; i < endRow; i++) {
 		for (int j = 0; j < data1[0].size(); j++) {
 			if (direction == 1 ? i+k <= j : i+k>=j) 
@@ -243,7 +261,7 @@ Matrix<T>& Matrix<T>::operator=(Matrix&& other) noexcept {
 }
 
 template <typename T>
-void Matrix<T>::fillWithValue(const std::vector<std::vector<T>> &data1, const std::vector<std::vector<T>> &data2, std::vector<std::vector<T>> &result, int startRow, int endRow)
+void Matrix<T>::fillWithValue(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow)
 {
 	for (int i = startRow; i < endRow; i++) {
 		for (int j = 0; j < result[0].size(); j++) {
@@ -253,7 +271,7 @@ void Matrix<T>::fillWithValue(const std::vector<std::vector<T>> &data1, const st
 }
 
 template <typename T>
-void Matrix<T>::addMatrices(const std::vector<std::vector<T>> &data1, const std::vector<std::vector<T>> &data2, std::vector<std::vector<T>> &result, int startRow, int endRow)
+void Matrix<T>::addMatrices(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow)
 {
     for (int i = startRow; i < endRow; i++) {
 		for (int j = 0; j < data1[0].size(); j++) {
@@ -263,7 +281,7 @@ void Matrix<T>::addMatrices(const std::vector<std::vector<T>> &data1, const std:
 }
 
 template<typename T>
-void Matrix<T>::substractMatrices(const std::vector<std::vector<T>>& data1, const std::vector<std::vector<T>>& data2, std::vector<std::vector<T>>& result, int startRow, int endRow) {
+void Matrix<T>::substractMatrices(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow) {
 	for (int i = startRow; i < endRow; i++) {
 		for (int j = 0; j < data1[0].size(); j++) {
 			result[i][j] = data1[i][j] - data2[i][j];
@@ -272,7 +290,7 @@ void Matrix<T>::substractMatrices(const std::vector<std::vector<T>>& data1, cons
 }
 
 template<typename T>
-void Matrix<T>::multiplyMatrices(const std::vector<std::vector<T>>& data1, const std::vector<std::vector<T>>& data2, std::vector<std::vector<T>>& result, int startRow, int endRow) {
+void Matrix<T>::multiplyMatrices(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow) {
 	for (int i = startRow; i < endRow; i++) {
 		for (int j = 0; j < data2[0].size(); j++) {
 			for (int k = 0; k < data1[0].size(); k++) {
@@ -283,27 +301,27 @@ void Matrix<T>::multiplyMatrices(const std::vector<std::vector<T>>& data1, const
 }
 
 template<typename T>
-void Matrix<T>::multiplyByConstant(const std::vector<std::vector<T>>& data1, const std::vector<std::vector<T>>& data2, std::vector<std::vector<T>>& result, int startRow, int endRow) {
+void Matrix<T>::multiplyByConstant(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow) {
 	for (int i = startRow; i < endRow; i++) {
 		for (int j = 0; j < data1[0].size(); j++) {
 			// assume data2 is (1,1) matrix
-			result[i][j] = data1[i][j] * data2[0][0];
+			result[i][j] = data1[i][j] * args[0][0];
 		}
 	}
 }
 
 template<typename T>
-void Matrix<T>::divideByConstant(const std::vector<std::vector<T>>& data1, const std::vector<std::vector<T>>& data2, std::vector<std::vector<T>>& result, int startRow, int endRow) {
+void Matrix<T>::divideByConstant(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow) {
 	for (int i = startRow; i < endRow; i++) {
 		for (int j = 0; j < data1[0].size(); j++) {
 			// assume data2 is (1,1) matrix
-			result[i][j] = data1[i][j] / data2[0][0];
+			result[i][j] = data1[i][j] / args[0][0];
 		}
 	}
 }
 
 template<typename T>
-Matrix<T> Matrix<T>::threadedMatrixOperation(const Matrix& other, std::function<void(const std::vector<std::vector<T>>&, const std::vector<std::vector<T>>&, std::vector<std::vector<T>>&, int, int)> operation) const {
+Matrix<T> Matrix<T>::threadedMatrixOperation(const Matrix& args, const Matrix& other, ThreadedFunction operation) const {
 
 #ifdef MATRIX_DEBUG
 	auto startTime = std::chrono::high_resolution_clock::now();
@@ -311,13 +329,17 @@ Matrix<T> Matrix<T>::threadedMatrixOperation(const Matrix& other, std::function<
 	int numOfThreads = std::min(size.n, (int)std::thread::hardware_concurrency());
 	int rowsPerThread = size.n / numOfThreads;
 
-	Matrix<T> temp = Matrix<T>(size);
+	Matrix<T> temp;
+	if (size.m == other.size.n)
+		temp = Matrix<T>(size.n, other.size.m);
+	else
+		temp = Matrix<T>(size);
 
 	std::vector<std::thread> threads;
 	for (int i = 0; i < numOfThreads - 1; ++i) {
-		threads.emplace_back(operation, std::ref(rawData), std::ref(other.rawData), std::ref(temp.rawData), i * rowsPerThread, (i + 1) * rowsPerThread);
+		threads.emplace_back(operation, std::ref(args.rawData), std::ref(rawData), std::ref(other.rawData), std::ref(temp.rawData), i * rowsPerThread, (i + 1) * rowsPerThread);
 	}
-	threads.emplace_back(operation, std::ref(rawData), std::ref(other.rawData), std::ref(temp.rawData), (numOfThreads - 1) * rowsPerThread, size.n);
+	threads.emplace_back(operation, std::ref(args.rawData), std::ref(rawData), std::ref(other.rawData), std::ref(temp.rawData), (numOfThreads - 1) * rowsPerThread, size.n);
 
 
 	for (auto& thread : threads) {
@@ -341,8 +363,9 @@ Matrix<T> Matrix<T>::operator+(const Matrix& other) const
 	if (size != other.size) {
 		throw MatrixSizeDisparityException();
 	}
+	Matrix<T> args;
 
-	return threadedMatrixOperation(other, &addMatrices);
+	return threadedMatrixOperation(args, other, &addMatrices);
 }
 
 template<typename T>
@@ -354,8 +377,9 @@ Matrix<T> Matrix<T>::operator-(const Matrix& other) const
 	if (size != other.size) {
 		throw MatrixSizeDisparityException();
 	}
+	Matrix<T> args;
 
-	return threadedMatrixOperation(other, &substractMatrices);
+	return threadedMatrixOperation(args, other, &substractMatrices);
 }
 
 template<typename T>
@@ -367,8 +391,9 @@ Matrix<T> Matrix<T>::operator*(const Matrix& other) const
 	if (size.m != other.size.n) {
 		throw MatrixSizeDisparityException();
 	}
+	Matrix<T> args;
 
-	return threadedMatrixOperation(other, &multiplyMatrices);
+	return threadedMatrixOperation(args, other, &multiplyMatrices);
 }
 
 template<typename T>
@@ -377,9 +402,10 @@ Matrix<T> Matrix<T>::operator*(const T& value) const
 #ifdef MATRIX_DEBUG
 	std::cout << "Starting Matrix<T>::operator*(const T& value)\n";
 #endif
-	Matrix<T> other = Matrix<T>(1, 1, value);
+	Matrix<T> args = Matrix<T>(1, 1, value);
+	Matrix<T> other;
 
-	return threadedMatrixOperation(other, &multiplyByConstant);
+	return threadedMatrixOperation(args, other, &multiplyByConstant);
 }
 
 template<typename T>
@@ -391,15 +417,36 @@ Matrix<T> Matrix<T>::operator/(const T& value) const
 	if (value == 0) {
 		throw std::runtime_error("Division by zero error");
 	}
-	Matrix<T> other = Matrix<T>(1, 1, value);
+	Matrix<T> args = Matrix<T>(1, 1, value);
+	Matrix<T> other;
 
-	return threadedMatrixOperation(other, &divideByConstant);
+	return threadedMatrixOperation(args, other, &divideByConstant);
 }
 
 template <typename T>
 T &Matrix<T>::operator[](Dimensions indecies)
 {
 	return rawData[indecies.n][indecies.m];
+}
+
+template <typename T>
+bool Matrix<T>::operator==(const Matrix &other)
+{
+	if (size != other.size)
+		return false;
+    for (int i = 0; i < size.n; i++) {
+		for (int j = 0; j < size.m; j++) {
+			if (rawData[i][j] != other.rawData[i][j])
+				return false;
+		}
+	}
+	return true;
+}
+
+template <typename T>
+bool Matrix<T>::operator!=(const Matrix &other)
+{
+    return !(*this == other);
 }
 
 template class Matrix<int>;

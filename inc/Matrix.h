@@ -13,27 +13,37 @@ public:
     }
 };
 
+class NotSquareMatrixException : public std::exception {
+public:
+    virtual const char* what() const throw() {
+        return "Matrix needs to be square";
+    }
+};
+
 template<typename T>
 class Matrix
 {
+	typedef std::vector<std::vector<T>> Data;
+	typedef std::function<void(const Data&, const Data&, const Data&, Data&, int, int)> ThreadedFunction;
+
 	Dimensions size;
-	std::vector<std::vector<T>> rawData;
+	Data rawData;
 
 	// unused
-    static void fillWithValue(const std::vector<std::vector<T>> &data1, const std::vector<std::vector<T>> &data2, std::vector<std::vector<T>> &result, int startRow, int endRow);
+    static void fillWithValue(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 
-	static void addMatrices(const std::vector<std::vector<T>>& matrix1, const std::vector<std::vector<T>>& matrix2, std::vector<std::vector<T>>& result, int startRow, int endRow);
-	static void substractMatrices(const std::vector<std::vector<T>>& data1, const std::vector<std::vector<T>>& data2, std::vector<std::vector<T>>& result, int startRow, int endRow);
-	static void multiplyMatrices(const std::vector<std::vector<T>>& data1, const std::vector<std::vector<T>>& data2, std::vector<std::vector<T>>& result, int startRow, int endRow);
-    static void multiplyByConstant(const std::vector<std::vector<T>> &data1, const std::vector<std::vector<T>> &data2, std::vector<std::vector<T>> &result, int startRow, int endRow);
-    static void divideByConstant(const std::vector<std::vector<T>> &data1, const std::vector<std::vector<T>> &data2, std::vector<std::vector<T>> &result, int startRow, int endRow);
+	static void addMatrices(const Data& args, const Data& matrix1, const Data& matrix2, Data& result, int startRow, int endRow);
+	static void substractMatrices(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow);
+	static void multiplyMatrices(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow);
+    static void multiplyByConstant(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
+    static void divideByConstant(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 
-	// data2 contains k value of diag function
-    static void getDiagonal(const std::vector<std::vector<T>> &data1, const std::vector<std::vector<T>> &data2, std::vector<std::vector<T>> &result, int startRow, int endRow);
-	// data2[0][0] contains k value of diag function
-	// data2[0][1] contains direction of triangle
+	// args contains k value of diag function
+    static void getDiagonal(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
+	// args[0][0] contains k value of diag function
+	// args[0][1] contains direction of triangle
 	// direction: -1 means down, 1 means up 
-    static void getTriangle(const std::vector<std::vector<T>> &data1, const std::vector<std::vector<T>> &data2, std::vector<std::vector<T>> &result, int startRow, int endRow);
+    static void getTriangle(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 
 	// Splits the matrix into even chunks and performs given 'operation' on each chunk using multithreading
 	// this - first operand
@@ -43,8 +53,8 @@ class Matrix
 	// - all cells of the result matrix must be filled with some value
 	// - data1 contains rawData of 'this' matrix 
 	// - data2 contains rawData of 'other' matrix for operations with 2 operands
-	// - data2 contains additional arguments for operations with 1 operand
-    Matrix threadedMatrixOperation(const Matrix& other, std::function<void(const std::vector<std::vector<T>>&, const std::vector<std::vector<T>>&, std::vector<std::vector<T>>&, int, int)> operation) const;
+	// - args contains additional arguments
+    Matrix threadedMatrixOperation(const Matrix& args, const Matrix& other, ThreadedFunction operation) const;
 
 public:
 	Matrix() : size({0,0}) {};
@@ -78,6 +88,8 @@ public:
 	Matrix operator/(const T& value) const;
 
 	T& operator[](Dimensions indecies);
+	bool operator==(const Matrix& other);
+	bool operator!=(const Matrix& other);
 
 	
 

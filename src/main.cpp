@@ -29,9 +29,11 @@ int main() {
     Matrix<int> test = Matrix<int>(5,5,1) * 6 / 2;   
     test.print();
 
-    Matrix<int> a = Matrix<int>(1000,1000,1) * Matrix<int>(1000,1000,1);
+    Matrix<int> a = Matrix<int>(300,100,1) * Matrix<int>(100,500,1);
+    Matrix<int> b = Matrix<int>(1000,1000,1) * Matrix<int>(1000,1000,1);
     //a.print();
     test.diag().print();
+    test.diag(1).print();
     test.tril().print();
     test.triu().print();
     test.tril(-1).print();
@@ -39,7 +41,23 @@ int main() {
 
     Matrix<int>().print();
 
-   
+    Matrix<int> c = Matrix<int>(2,2,1).tril();
+    c.print();
+    c = Matrix<int>(2,2,1).triu();
+    c.print();
+    c = Matrix<int>(1,1,1).diag();
+    c.print();
+    c = Matrix<int>(2,2,1).diag();
+    c.print();
+    c = Matrix<int>(1, 1, 1).tril();
+    c.print();
+    c = Matrix<int>(1, 1, 1).triu();
+    c.print();
 
+    if (Matrix<int>(1, 1, 1).triu() == Matrix<int>(1, 1, 1).tril())
+        std::cout << "works\n";
+
+    if (Matrix<int>(2, 2, 1).triu() != Matrix<int>(2, 2, 1).tril())
+        std::cout << "works\n";
 
 }
