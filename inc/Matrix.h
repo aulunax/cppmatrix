@@ -35,7 +35,8 @@ class Matrix
 
 	Dimensions size;
 	Data rawData;
-
+// public for pybind
+public:
 	// unused
     static void fillWithValue(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 
@@ -108,7 +109,21 @@ public:
 
 
 	T& operator[](Dimensions indecies);
-	bool operator==(const Matrix& other);
-	bool operator!=(const Matrix& other);
+	friend bool operator==(const Matrix<T>& a, const Matrix<T>& b) {
+		if (a.size != b.size)
+		return false;
+		for (int i = 0; i < a.size.n; i++) {
+			for (int j = 0; j < a.size.m; j++) {
+				if (a.rawData[i][j] != b.rawData[i][j])
+					return false;
+		}
+	}
+	return true;
+	}
+	friend bool operator!=(const Matrix<T>& a, const Matrix<T>& b) {
+		return !(a == b);
+	}
+
 };
+
 

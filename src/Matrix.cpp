@@ -491,7 +491,7 @@ Matrix<T> Matrix<T>::gaussianElimination(const Matrix &A, const Matrix &b)
 		int valMax = abs(Ab[{h,k}]);
 		int iMax = h;
 		for (int i = h; i < Ab.size.n; i++) {
-			if (abs(Ab[{i, k}]) > iMax) {
+			if (abs(Ab[{i, k}]) > valMax) {
 				valMax = abs(Ab[{i, k}]);
 				iMax = i;
 			}
@@ -594,25 +594,25 @@ T &Matrix<T>::operator[](Dimensions indecies)
 	return rawData[indecies.n][indecies.m];
 }
 
-template <typename T>
-bool Matrix<T>::operator==(const Matrix &other)
-{
-	if (size != other.size)
-		return false;
-    for (int i = 0; i < size.n; i++) {
-		for (int j = 0; j < size.m; j++) {
-			if (rawData[i][j] != other.rawData[i][j])
-				return false;
-		}
-	}
-	return true;
-}
+// template <typename T>
+// bool operator==(const Matrix<T> &a, const Matrix<T> &b)
+// {
+// 	if (a.size != b.size)
+// 		return false;
+//     for (int i = 0; i < a.size.n; i++) {
+// 		for (int j = 0; j < a.size.m; j++) {
+// 			if (a.rawData[i][j] != b.rawData[i][j])
+// 				return false;
+// 		}
+// 	}
+// 	return true;
+// }
 
-template <typename T>
-bool Matrix<T>::operator!=(const Matrix &other)
-{
-    return !(*this == other);
-}
+// template <typename T>
+// bool operator!=(const Matrix<T> &a, const Matrix<T> &b)
+// {
+//     return !(a == b);
+// }
 
 template class Matrix<int>;
 template class Matrix<float>;
