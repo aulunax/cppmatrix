@@ -14,3 +14,4 @@ typedef struct Dimensions {
         return !(*this == other);
     }
 } Dimensions;
+

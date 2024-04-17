@@ -29,9 +29,10 @@ int main() {
     Matrix<int> test = Matrix<int>(5,5,1) * 6 / 2;   
     test.print();
 
-    Matrix<int> a = Matrix<int>(300,100,1) * Matrix<int>(100,500,1);
-    Matrix<int> b = Matrix<int>(1000,1000,1) * Matrix<int>(1000,1000,1);
-    //a.print();
+    //Matrix<int> a = Matrix<int>(300,100,1) * Matrix<int>(100,500,1);
+    //a.transpose();
+    //Matrix<int> z = Matrix<int>(1000,1000,1) * Matrix<int>(1000,1000,1);
+    //z.transpose();
     test.diag().print();
     test.diag(1).print();
     test.tril().print();
@@ -60,4 +61,58 @@ int main() {
     if (Matrix<int>(2, 2, 1).triu() != Matrix<int>(2, 2, 1).tril())
         std::cout << "works\n";
 
+    (-xd).print();
+
+    Matrix<int> tr("1,2,3;4,5,6");
+    tr.print();
+    tr.transpose().print();
+
+
+    try {
+        Matrix<double> A("2,1;3,-2");
+        Matrix<double> b("5;7");
+
+        Matrix<double> x = A | b;
+        std::cout << "Solution:\n\n";
+        x.print();
+    }
+    catch (MatrixEquationNoUniqueSolutionException e) {
+        std::cout << "No unique solutions\n\n";
+    }
+
+    try {
+        Matrix<double> A("1,3,1;1,1,-1;3,11,5");
+        Matrix<double> b("9;1;35");
+
+        Matrix<double> x = A | b;
+        std::cout << "Solution:\n\n";
+        x.print();
+    }
+    catch (MatrixEquationNoUniqueSolutionException e) {
+        std::cout << "No unique solutions\n\n";
+    }
+
+    try {
+        Matrix<double> A("1,1,1,1;1,2,3,4;1,3,6,10;1,4,10,20");
+        Matrix<double> b("4,3,2,1");
+
+        Matrix<double> x = b / A;
+        std::cout << "Solution:\n\n";
+        x.print();
+    }
+    catch (MatrixEquationNoUniqueSolutionException e) {
+        std::cout << "No unique solutions\n\n";
+    }
+
+    try {
+        Matrix<double> A("1,1,1,1;1,2,3,4;1,3,6,10;1,4,10,20");
+        Matrix<double> b("4,3,2,1");
+
+        Matrix<double> x = b / A;
+        std::cout << "Solution:\n\n";
+        x.print();
+    }
+    catch (MatrixEquationNoUniqueSolutionException e) {
+        std::cout << "No unique solutions\n\n";
+    }
 }
