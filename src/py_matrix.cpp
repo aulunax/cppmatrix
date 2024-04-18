@@ -50,7 +50,7 @@ PYBIND11_MODULE(py_matrix, m) {
         .def("__getitem__", [](Matrix<double> &obj, std::tuple<int, int> indices) {
             int row = std::get<0>(indices);
             int col = std::get<1>(indices);
-            if (row >= obj.size.n || col >= obj.size.m) {
+            if (row >= obj.getSize().n || col >= obj.getSize().m) {
                 throw py::index_error();
             }
             return obj[Dimensions{row,col}];
@@ -58,7 +58,7 @@ PYBIND11_MODULE(py_matrix, m) {
         .def("__setitem__", [](Matrix<double> &obj, std::tuple<int, int> indices, int value) {
             int row = std::get<0>(indices);
             int col = std::get<1>(indices);
-            if (row >= obj.size.n || col >= obj.size.m) {
+            if (row >= obj.getSize().n || col >= obj.getSize().m) {
                 throw py::index_error();
             }
             obj[Dimensions{row,col}] = value;
@@ -74,20 +74,9 @@ PYBIND11_MODULE(py_matrix, m) {
         .def("fill", &Matrix<double>::fill)
         .def("reserve", &Matrix<double>::reserve)
         .def("print", &Matrix<double>::print)
-
-        .def("threadedMatrixOperation", &Matrix<double>::threadedMatrixOperation)
-        // static methods
-        .def_static("fillWithValue", &Matrix<double>::fillWithValue)
-        .def_static("addMatrices", &Matrix<double>::addMatrices)
-        .def_static("substractMatrices", &Matrix<double>::substractMatrices)
-        .def_static("multiplyMatrices", &Matrix<double>::multiplyMatrices)
-        .def_static("multiplyByConstant", &Matrix<double>::multiplyByConstant)
-        .def_static("divideByConstant", &Matrix<double>::divideByConstant)
-        .def_static("getDiagonal", &Matrix<double>::getDiagonal)
-        .def_static("getTriangle", &Matrix<double>::getTriangle)
-        .def_static("getTransposed", &Matrix<double>::getTransposed)
-        .def_static("gaussianElimination", &Matrix<double>::gaussianElimination)
-        
-
+        .def("getSize", [](const Matrix<double> &obj) {
+            Dimensions size = obj.getSize();
+            return std::tuple<int, int>(size.n, size.m);
+        })
 ;
 }

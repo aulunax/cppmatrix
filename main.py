@@ -38,3 +38,6 @@ x.print()
 
 empty = Matrix()
 empty.print()
+
+size = c.getSize()
+print(size)

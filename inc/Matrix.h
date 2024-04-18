@@ -32,8 +32,7 @@ class Matrix
 {
 	typedef std::vector<std::vector<T>> Data;
 	typedef std::function<void(const Data&, const Data&, const Data&, Data&, int, int)> ThreadedFunction;
-// public for pybind
-public:
+
 	Dimensions size;
 	Data rawData;
 
@@ -80,6 +79,7 @@ public:
 	Matrix(const Matrix& other);
 	Matrix(Matrix&& other);
 
+	Dimensions getSize() const {return size;};
 	void print();
 	void reserve(int n, int m);
 	void fill(int n, int m, T value);
