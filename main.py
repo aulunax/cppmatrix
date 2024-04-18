@@ -9,9 +9,9 @@ transposed_matrix.print()
 multi = transposed_matrix * matrix
 multi.print()
 
-test1 = Matrix(2000,1000,1)
-test2 = Matrix(1000,2000,1)
-check = Matrix(2000,2000,1000)
+test1 = Matrix(1000,1000,1)
+test2 = Matrix(1000,1000,1)
+check = Matrix(1000,1000,1000)
 
 result = test1 * test2
 
