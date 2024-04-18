@@ -47,7 +47,22 @@ PYBIND11_MODULE(py_matrix, m) {
         .def(py::self / py::self)
         .def(py::self | py::self)
 
-        .def("__getitem__", &Matrix<double>::operator[])
+        .def("__getitem__", [](Matrix<double> &obj, std::tuple<int, int> indices) {
+            int row = std::get<0>(indices);
+            int col = std::get<1>(indices);
+            if (row >= obj.size.n || col >= obj.size.m) {
+                throw py::index_error();
+            }
+            return obj[Dimensions{row,col}];
+        })
+        .def("__setitem__", [](Matrix<double> &obj, std::tuple<int, int> indices, int value) {
+            int row = std::get<0>(indices);
+            int col = std::get<1>(indices);
+            if (row >= obj.size.n || col >= obj.size.m) {
+                throw py::index_error();
+            }
+            obj[Dimensions{row,col}] = value;
+        })
         .def(py::self == py::self)
         .def(py::self != py::self)
 

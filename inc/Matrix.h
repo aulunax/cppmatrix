@@ -32,11 +32,11 @@ class Matrix
 {
 	typedef std::vector<std::vector<T>> Data;
 	typedef std::function<void(const Data&, const Data&, const Data&, Data&, int, int)> ThreadedFunction;
-
-	Dimensions size;
-	Data rawData;
 // public for pybind
 public:
+	Dimensions size;
+	Data rawData;
+
 	// unused
     static void fillWithValue(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 
