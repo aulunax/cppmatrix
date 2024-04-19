@@ -1,6 +1,6 @@
 from py_matrix import Matrix
+from python.common import norm
 import time
-from common import norm
 
 def jacobi_iter_method(A: Matrix, b: Matrix, max_iterations: int):
     start_time = time.time()

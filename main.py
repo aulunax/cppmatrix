@@ -1,11 +1,10 @@
-import copy
-from py_matrix import Matrix, MatrixSizeDisparityException
-from jacobi import jacobi_iter_method
-from gauss_seidel import gauss_seidel_iter_method
-from common import create_matrix, norm
+from py_matrix import Matrix
+from python.jacobi import jacobi_iter_method
+from python.gauss_seidel import gauss_seidel_iter_method
+from python.common import create_matrix
 from math import sin
 
-N = 3000 # 948
+N = 948 # 948
 a1, a2, a3 = 7, -1, -1
 
 A = create_matrix(N,a1,a2,a3)

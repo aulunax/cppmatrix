@@ -1,5 +1,5 @@
 from py_matrix import Matrix
-from common import norm
+from python.common import norm
 import time
 
 def gauss_seidel_iter_method(A: Matrix, b: Matrix, max_iterations: int):
