@@ -9,9 +9,10 @@ def gauss_seidel_iter_method(A: Matrix, b: Matrix, max_iterations: int):
     L = A.tril(-1)
     U = A.triu(1)
 
-    # implement forwards substitution
-    M = -(D+L) | U
-    bm = (D+L) | b
+    DL = D+L
+
+    M = -DL
+    bm = DL | b
 
     x = Matrix(A.getSize()[0], 1, 1)
 
@@ -19,7 +20,7 @@ def gauss_seidel_iter_method(A: Matrix, b: Matrix, max_iterations: int):
     err_norms = []
     for _ in range(max_iterations):
         iterations += 1
-        x = M*x+bm
+        x = (M | (U*x)) + bm
 
         err_norm = norm(A*x-b)
         err_norms.append(err_norm)

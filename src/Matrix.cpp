@@ -530,36 +530,68 @@ Matrix<T> Matrix<T>::operator|(const Matrix &other) const
 	auto startTime = std::chrono::high_resolution_clock::now();
 #endif
 
-	Matrix<T> gaussianResult = gaussianElimination((*this), other);
-
-	// check if there is unique solution by calculating the rank of the matrix
-	// https://en.wikipedia.org/wiki/Rank_(linear_algebra)
-	int ranks = 0;
+	bool isTril = true;
 	for (int i = 0; i < size.n; i++) {
-		bool zeros = true;
-		for (int j = 0; j < gaussianResult.size.m - 1; j++) {
-			if (gaussianResult[{i, j}] != 0) {
-				zeros = false;
+		for (int j = 0; j < size.m; j++) {
+			if (i < j && rawData[i][j] != 0) {
+				isTril = false;
 				break;
 			}
+			if (i == j && rawData[i][j] == 0) {
+				throw MatrixNotInvertible();
+			}
+				
 		}
-		if (!zeros)
-			ranks += 1;
-	}
-	if (ranks != gaussianResult.size.m - 1) {
-		throw MatrixEquationNoUniqueSolutionException();
+		if (!isTril)
+			break;
 	}
 
 	Matrix<T> x(size.n, 1);
 
-	// get result by back substitution
-	// https://algowiki-project.org/en/Backward_substitution
-	for (int i = size.n - 1; i >= 0; i--) {
-		x[{i, 0}] = gaussianResult[{i, size.n}];
-		for (int j = i + 1; j < size.n; ++j) {
-			x[{i, 0}] -= gaussianResult[{i, j}] * x[{j, 0}];
+	if (isTril) {
+		for (int i = 0; i < size.n; ++i) {
+			x[{i,0}] = other.rawData[i][0];
+
+			// Subtract the contributions of already solved variables
+			for (int j = 0; j < i; ++j) {
+				x[{i,0}] -= rawData[i][j] * x[{j,0}];
+			}
+
+			// Divide by the diagonal element
+			x[{i,0}] /= rawData[i][i];
 		}
-		x[{i, 0}] /= gaussianResult[{i, i}];
+	}
+	else {
+		Matrix<T> gaussianResult = gaussianElimination((*this), other);
+
+		// check if there is unique solution by calculating the rank of the matrix
+		// https://en.wikipedia.org/wiki/Rank_(linear_algebra)
+		int ranks = 0;
+		for (int i = 0; i < size.n; i++) {
+			bool zeros = true;
+			for (int j = 0; j < gaussianResult.size.m - 1; j++) {
+				if (gaussianResult[{i, j}] != 0) {
+					zeros = false;
+					break;
+				}
+			}
+			if (!zeros)
+				ranks += 1;
+		}
+		if (ranks != gaussianResult.size.m - 1) {
+			throw MatrixEquationNoUniqueSolutionException();
+		}
+
+
+		// get result by back substitution
+		// https://algowiki-project.org/en/Backward_substitution
+		for (int i = size.n - 1; i >= 0; i--) {
+			x[{i, 0}] = gaussianResult[{i, size.n}];
+			for (int j = i + 1; j < size.n; ++j) {
+				x[{i, 0}] -= gaussianResult[{i, j}] * x[{j, 0}];
+			}
+			x[{i, 0}] /= gaussianResult[{i, i}];
+		}
 	}
 
 #ifdef MATRIX_DEBUG

@@ -4,7 +4,7 @@
 #include <functional> 
 
 // if defined show some debug info
-#define MATRIX_DEBUG
+// #define MATRIX_DEBUG
 
 typedef struct Dimensions {
 	int n,m;
