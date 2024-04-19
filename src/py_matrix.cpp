@@ -55,7 +55,7 @@ PYBIND11_MODULE(py_matrix, m) {
             }
             return obj[Dimensions{row,col}];
         })
-        .def("__setitem__", [](Matrix<double> &obj, std::tuple<int, int> indices, int value) {
+        .def("__setitem__", [](Matrix<double> &obj, std::tuple<int, int> indices, double value) {
             int row = std::get<0>(indices);
             int col = std::get<1>(indices);
             if (row >= obj.getSize().n || col >= obj.getSize().m) {
@@ -67,6 +67,7 @@ PYBIND11_MODULE(py_matrix, m) {
         .def(py::self != py::self)
 
         // methods
+        .def("inv", &Matrix<double>::inv)
         .def("transpose", &Matrix<double>::transpose)
         .def("triu", &Matrix<double>::triu)
         .def("tril", &Matrix<double>::tril)

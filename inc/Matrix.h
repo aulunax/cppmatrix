@@ -5,6 +5,9 @@
 #include <stdexcept>
 #include <functional>
 
+#ifdef MATRIX_DEBUG
+#define Duration(a) std::chrono::duration_cast<std::chrono::microseconds>(a)
+#endif
 
 class MatrixSizeDisparityException : public std::exception {
 public:
@@ -27,6 +30,16 @@ public:
 	}
 };
 
+class MatrixNotInvertible : public std::exception {
+public:
+	virtual const char* what() const throw() {
+		return "Matrix is not invertible";
+	}
+};
+
+
+
+
 template<typename T>
 class Matrix
 {
@@ -35,6 +48,24 @@ class Matrix
 
 	Dimensions size;
 	Data rawData;
+
+#ifdef MATRIX_DEBUG
+	template<typename Func, typename... Args>
+	auto returnTypeFunctionWrapper(const std::string& functionName, Func&& func, Args&&... args) const {
+		auto startTime = std::chrono::high_resolution_clock::now();
+		auto result = std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
+		auto endTime = std::chrono::high_resolution_clock::now();
+		auto duration = Duration(endTime - startTime);
+		std::cout << "Function: " << functionName << "\nTime taken: " << duration.count()/1000.0 << " milliseconds" << std::endl;
+		return result;
+	}
+	#else
+	template<typename Func, typename... Args>
+	auto returnTypeFunctionWrapper(const std::string& functionName, Func&& func, Args&&... args) const {
+		return std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
+	}
+#endif
+
 
 	// unused
     static void fillWithValue(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
@@ -83,6 +114,8 @@ public:
 	void print();
 	void reserve(int n, int m);
 	void fill(int n, int m, T value);
+
+	Matrix inv() const;
 
 	// k means which diagonal should resulting matrix contain (0 means main diagonal)
 	Matrix diag(int k=0) const;

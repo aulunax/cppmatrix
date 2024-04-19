@@ -1,4 +1,7 @@
 #pragma once
+#include <iostream>
+#include <chrono>
+#include <functional> 
 
 // if defined show some debug info
 #define MATRIX_DEBUG

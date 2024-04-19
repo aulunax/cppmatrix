@@ -3,6 +3,12 @@
 
 int main() {
 
+    Matrix<double> diag(3,3,3);
+    diag = diag.diag();
+    Matrix<double> diagInv = diag.inv();
+    diagInv.print();
+
+
     Matrix<int> help("4,4,7;6,3,1;0,5,1");
     help.print();
 
@@ -31,7 +37,7 @@ int main() {
 
     //Matrix<int> a = Matrix<int>(300,100,1) * Matrix<int>(100,500,1);
     //a.transpose();
-    Matrix<int> z = Matrix<int>(1000,1000,1) * Matrix<int>(1000,1000,1);
+    Matrix<int> z = Matrix<int>(2000,2000,1) * Matrix<int>(2000,2000,1);
     //z.transpose();
     test.diag().print();
     test.diag(1).print();

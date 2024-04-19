@@ -1,43 +1,20 @@
 from py_matrix import Matrix, MatrixSizeDisparityException
-import copy
+from jacobi import jacobi_iter_method
+from common import create_matrix
+from math import sin
 
-matrix = Matrix("1,2,3;4,5,6;7,8,9")
-matrix.print()
-transposed_matrix = matrix.transpose()
-transposed_matrix.print()
+N = 2000 # 948
+a1, a2, a3 = 7, -1, -1
 
-multi = transposed_matrix * matrix
-multi.print()
+A = create_matrix(N,a1,a2,a3)
 
-test1 = Matrix(1000,1000,1)
-test2 = Matrix(1000,1000,1)
-check = Matrix(1000,1000,1000)
+b = Matrix(N,1,1)
+for i in range(N):
+    b[(i,0)] = sin((i+1)*4)
 
-result = test1 * test2
+x, err_norms, iterations, time_taken = jacobi_iter_method(A, b, 100)
 
-try:
-    xd = result * multi
-except MatrixSizeDisparityException:
-    print("bad sizes")
-
-print(result[(1,1)])
-print(test1 == test2)
-print(result == check)
-
-A = Matrix("2,1;3,-2")
-b = Matrix("5;7")
-
-x = A | b
-x.print()
-
-c = copy.deepcopy(x)
-c[(0,0)] = 0
-
-c.print()
-x.print()
-
-empty = Matrix()
-empty.print()
-
-size = c.getSize()
-print(size)
+#x.print()
+print("iterations: " + str(iterations))
+print("time_taken: " + str(time_taken))
+print("err_norm: " + str(err_norms))
