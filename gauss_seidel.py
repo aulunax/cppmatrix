@@ -1,18 +1,17 @@
 from py_matrix import Matrix
-import time
 from common import norm
+import time
 
-def jacobi_iter_method(A: Matrix, b: Matrix, max_iterations: int):
+def gauss_seidel_iter_method(A: Matrix, b: Matrix, max_iterations: int):
     start_time = time.time()
 
     D = A.diag(0)
     L = A.tril(-1)
     U = A.triu(1)
 
-    D_inv = D.inv()
-
-    M = -D_inv*(L+U)
-    bm = D_inv*b
+    # implement forwards substitution
+    M = -(D+L) | U
+    bm = (D+L) | b
 
     x = Matrix(A.getSize()[0], 1, 1)
 

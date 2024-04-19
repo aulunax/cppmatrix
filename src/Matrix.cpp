@@ -474,10 +474,6 @@ Matrix<T> Matrix<T>::gaussianElimination(const Matrix &A, const Matrix &b)
 		Ab.rawData[i][A.size.m] = b.rawData[i][0];	
 	}
 
-#ifdef MATRIX_DEBUG
-	std::cout << "Concat result:\n";
-	Ab.print();
-#endif
 
 	int h = 0;
 	int k = 0;
@@ -506,10 +502,6 @@ Matrix<T> Matrix<T>::gaussianElimination(const Matrix &A, const Matrix &b)
 			h += 1;
 			k += 1;
 		}
-#ifdef MATRIX_DEBUG
-	std::cout << "Gaussian elimination step:\n";
-	Ab.print();
-#endif
 	}
     return Ab;
 }
@@ -539,11 +531,6 @@ Matrix<T> Matrix<T>::operator|(const Matrix &other) const
 #endif
 
 	Matrix<T> gaussianResult = gaussianElimination((*this), other);
-
-#ifdef MATRIX_DEBUG
-	std::cout << "Gaussian elimination result:\n\n";
-	gaussianResult.print();
-#endif
 
 	// check if there is unique solution by calculating the rank of the matrix
 	// https://en.wikipedia.org/wiki/Rank_(linear_algebra)
