@@ -38,8 +38,6 @@ public:
 };
 
 
-
-
 template<typename T>
 class Matrix
 {
@@ -70,12 +68,12 @@ class Matrix
 	// unused
     static void fillWithValue(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 
+	// functions that can be threaded using threadedMatrixOperation(...)
 	static void addMatrices(const Data& args, const Data& matrix1, const Data& matrix2, Data& result, int startRow, int endRow);
 	static void substractMatrices(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow);
 	static void multiplyMatrices(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow);
     static void multiplyByConstant(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
     static void divideByConstant(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
-
 	// args contains k value of diag function
     static void getDiagonal(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 	// args[0][0] contains k value of diag function
@@ -97,8 +95,18 @@ class Matrix
 
 	// https://en.wikipedia.org/wiki/Gaussian_elimination#Pseudocode
 	// returns copy of concatenated matrix A and b in row echelon form
+	// unused (replaced by LU factorization)
 	static Matrix gaussianElimination(const Matrix& A, const Matrix& b);
 
+	// checks if rank of matrix is equal to number of its columns
+	bool HasUniqueSolution() const;
+
+	bool isTril() const;
+	bool isTriu() const;
+
+	// returns solution to (this*)*b = x
+	Matrix backSubstitution(const Matrix &b) const;
+	Matrix forwardSubstitution(const Matrix &b) const;
 public:
 	Matrix() : size({0,0}) {};
 	Matrix(const std::string& content);
@@ -115,6 +123,7 @@ public:
 	void reserve(int n, int m);
 	void fill(int n, int m, T value);
 
+	// only implemented for diagonal matrices
 	Matrix inv() const;
 
 	// k means which diagonal should resulting matrix contain (0 means main diagonal)
@@ -138,10 +147,12 @@ public:
 	// solves x*(*this) = other
 	Matrix operator/(const Matrix& other) const;
 	// solves (*this)*x = other
+	// handles 3 cases:
+	// upper triangular, lower triangular and miscellaneous matrix
 	Matrix operator|(const Matrix& other) const;
 
-
 	T& operator[](Dimensions indecies);
+
 	friend bool operator==(const Matrix<T>& a, const Matrix<T>& b) {
 		if (a.size != b.size)
 		return false;

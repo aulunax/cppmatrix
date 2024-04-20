@@ -37,7 +37,7 @@ int main() {
 
     //Matrix<int> a = Matrix<int>(300,100,1) * Matrix<int>(100,500,1);
     //a.transpose();
-    Matrix<int> z = Matrix<int>(2000,2000,1) * Matrix<int>(2000,2000,1);
+    Matrix<int> z = Matrix<int>(2000,1000,1) * Matrix<int>(1000,2000,1);
     //z.transpose();
     test.diag().print();
     test.diag(1).print();

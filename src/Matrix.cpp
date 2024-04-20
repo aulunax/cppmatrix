@@ -507,6 +507,106 @@ Matrix<T> Matrix<T>::gaussianElimination(const Matrix &A, const Matrix &b)
 }
 
 template <typename T>
+bool Matrix<T>::HasUniqueSolution() const
+{
+	int ranks = 0;
+	for (int i = 0; i < size.n; i++) {
+		bool zeros = true;
+		for (int j = 0; j < size.m; j++) {
+			if (rawData[i][j] != 0) {
+				zeros = false;
+				break;
+			}
+		}
+		if (!zeros)
+			ranks += 1;
+	}
+	if (ranks != size.n)
+    	return false;
+	return true;
+}
+
+template <typename T>
+bool Matrix<T>::isTril() const
+{
+    bool isTril = true;
+	for (int i = 0; i < size.n; i++) {
+		for (int j = 0; j < size.m; j++) {
+			if (i < j && rawData[i][j] != 0) {
+				isTril = false;
+				break;
+			}
+			if (i == j && rawData[i][j] == 0) {
+				throw MatrixNotInvertible();
+			}
+				
+		}
+		if (!isTril)
+			break;
+	}
+	return isTril;
+}
+
+template <typename T>
+bool Matrix<T>::isTriu() const
+{
+    bool isTriu = true;
+	for (int i = 0; i < size.n; i++) {
+		for (int j = 0; j < size.m; j++) {
+			if (i < j && rawData[i][j] != 0) {
+				isTriu = false;
+				break;
+			}
+			if (i == j && rawData[i][j] == 0) {
+				throw MatrixNotInvertible();
+			}
+				
+		}
+		if (!isTriu)
+			break;
+	}
+	return isTriu;
+}
+
+template <typename T>
+Matrix<T> Matrix<T>::backSubstitution(const Matrix &b) const
+{
+	Matrix<T> x(size.n, 1);
+
+    for (int i = size.n - 1; i >= 0; i--) {
+        x[{i,0}] = b.rawData[i][0];
+
+        // Subtract the contributions of already solved variables
+        for (int j = i + 1; j < size.n; j++) {
+            x[{i,0}] -= rawData[i][j] * x[{j,0}];
+        }
+
+        // Divide by the diagonal element
+        x[{i,0}] /= rawData[i][i];
+    }
+    return x;
+}
+
+template <typename T>
+Matrix<T> Matrix<T>::forwardSubstitution(const Matrix &b) const
+{
+	Matrix<T> x(size.n, 1);
+
+	for (int i = 0; i < size.n; i++) {
+		x[{i,0}] = b.rawData[i][0];
+
+		// Subtract the contributions of already solved variables
+		for (int j = 0; j < i; j++) {
+			x[{i,0}] -= rawData[i][j] * x[{j,0}];
+		}
+
+		// Divide by the diagonal element
+		x[{i,0}] /= rawData[i][i];
+	}
+    return x;
+}
+
+template <typename T>
 Matrix<T> Matrix<T>::operator/(const Matrix &other) const
 {
 #ifdef MATRIX_DEBUG
@@ -530,68 +630,48 @@ Matrix<T> Matrix<T>::operator|(const Matrix &other) const
 	auto startTime = std::chrono::high_resolution_clock::now();
 #endif
 
-	bool isTril = true;
-	for (int i = 0; i < size.n; i++) {
-		for (int j = 0; j < size.m; j++) {
-			if (i < j && rawData[i][j] != 0) {
-				isTril = false;
-				break;
-			}
-			if (i == j && rawData[i][j] == 0) {
-				throw MatrixNotInvertible();
-			}
-				
-		}
-		if (!isTril)
-			break;
-	}
+
+	// check if it is a triangular matrix
+	bool tril = isTril();
+	bool triu = isTriu();
+
 
 	Matrix<T> x(size.n, 1);
 
-	if (isTril) {
-		for (int i = 0; i < size.n; ++i) {
-			x[{i,0}] = other.rawData[i][0];
-
-			// Subtract the contributions of already solved variables
-			for (int j = 0; j < i; ++j) {
-				x[{i,0}] -= rawData[i][j] * x[{j,0}];
-			}
-
-			// Divide by the diagonal element
-			x[{i,0}] /= rawData[i][i];
-		}
+	// case 1: is lower triangular matrix
+	if (tril) {
+		x = std::move(forwardSubstitution(other));
 	}
+	// case 1: is upper triangular matrix
+	else if (triu) {
+		x = std::move(backSubstitution(other));
+	}
+	// case 3: is not triangular matrix
+	// https://en.wikipedia.org/wiki/LU_decomposition#MATLAB_code_example
 	else {
-		Matrix<T> gaussianResult = gaussianElimination((*this), other);
+		// Matrix<T> gaussianResult = gaussianElimination((*this), other);
+		// if (!gaussianResult.HasUniqueSolution())
+		// 	throw MatrixEquationNoUniqueSolutionException();
+		// Matrix<T> b(size.n,1);
+		// for (int i = 0; i < size.n; i++)
+		// 	b[{i,0}] = gaussianResult[{i,size.n}];
+		// x = std::move(gaussianResult.backSubstitution(b));
 
-		// check if there is unique solution by calculating the rank of the matrix
-		// https://en.wikipedia.org/wiki/Rank_(linear_algebra)
-		int ranks = 0;
-		for (int i = 0; i < size.n; i++) {
-			bool zeros = true;
-			for (int j = 0; j < gaussianResult.size.m - 1; j++) {
-				if (gaussianResult[{i, j}] != 0) {
-					zeros = false;
-					break;
+		Matrix<T> U = (*this);
+		Matrix<T> L = Matrix<T>(size,1).diag();
+		for(int i = 1; i < size.n; i++) {
+			for(int j = 0; j < i; j++) {
+				L[{i,j}] = U[{i,j}] / U[{j,j}];
+				for(int k = 0; k < size.n; k++) {
+					U[{i,k}] = U[{i,k}] - L[{i,j}]*U[{j,k}];
 				}
 			}
-			if (!zeros)
-				ranks += 1;
 		}
-		if (ranks != gaussianResult.size.m - 1) {
+		
+		Matrix<T> y = L.forwardSubstitution(other);
+		if (!U.HasUniqueSolution())
 			throw MatrixEquationNoUniqueSolutionException();
-		}
-
-
-		// get result by back substitution
-		// https://algowiki-project.org/en/Backward_substitution
-		for (int i = size.n - 1; i >= 0; i--) {
-			x[{i, 0}] = gaussianResult[{i, size.n}];
-			for (int j = i + 1; j < size.n; ++j) {
-				x[{i, 0}] -= gaussianResult[{i, j}] * x[{j, 0}];
-			}
-			x[{i, 0}] /= gaussianResult[{i, i}];
-		}
+		x = U.backSubstitution(y);
 	}
 
 #ifdef MATRIX_DEBUG

@@ -1,8 +1,14 @@
 ### Prerequisites
 - cpyhton3.6 or higher (with python-dev)
-- g++ with c++17 support for linux, MSVC2017+ for Windows
+- g++ with c++17 support
 - mypy for stubgen
+- cmake
 ### Instruction
 # Linux:
-1. Run the compile.sh file
-2. Run main.py in python
+1. Navigate to the project folder
+2. mkdir build
+3. cd build
+4. cmake ..
+5. cmake --build .
+6. cd ..
+7. ./main.py
