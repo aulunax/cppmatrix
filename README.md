@@ -23,7 +23,7 @@ cmake --build .
 6. Run the main.py
 ```sh
 cd ..
-./main.py
+python3 main.py
 ```
 ### Windows:
 1. idk, good luck
