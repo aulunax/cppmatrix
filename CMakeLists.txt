@@ -18,14 +18,24 @@ target_include_directories(py_matrix PRIVATE ${Python3_INCLUDE_DIRS})
 
 set_target_properties(py_matrix PROPERTIES PREFIX "" OUTPUT_NAME "py_matrix${CMAKE_SHARED_LIBRARY_SUFFIX}" SUFFIX "" LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
-add_custom_target(generate_stub ALL
-    COMMAND stubgen -m py_matrix -o ${CMAKE_SOURCE_DIR}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Generating stub"
-    VERBATIM
+find_program(STUBGEN_EXECUTABLE
+    NAMES stubgen
+    PATH_SUFFIXES bin
 )
 
-add_dependencies(generate_stub py_matrix)
+if(NOT STUBGEN_EXECUTABLE)
+    message(WARNING "Stub generation tool 'stubgen' from 'mypy' package not found. Stub generation will be skipped.
+Install 'mypy' package to generate the stub")
+else()
+    add_custom_target(generate_stub ALL
+        COMMAND ${STUBGEN_EXECUTABLE} -m py_matrix -o ${CMAKE_SOURCE_DIR}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Generating stub"
+        VERBATIM
+    )
+
+    add_dependencies(generate_stub py_matrix)
+endif()
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
