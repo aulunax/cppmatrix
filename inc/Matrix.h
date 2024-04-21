@@ -173,8 +173,3 @@ public:
 
 };
 
-#ifdef CUDA_SUPPORTED
-template<typename T>
-__global__ void cudaKernel(T* data, int size);
-#endif
-

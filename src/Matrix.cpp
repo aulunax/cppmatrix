@@ -689,14 +689,6 @@ T &Matrix<T>::operator[](Dimensions indecies)
 	return rawData[indecies.n][indecies.m];
 }
 
-#ifdef CUDA_SUPPORTED
-template<typename T>
-__global__ void cudaKernel(T* data, int size) {
-    // CUDA kernel implementation
-}
-
-#endif
-
 
 template class Matrix<int>;
 template class Matrix<double>;

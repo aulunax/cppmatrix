@@ -23,7 +23,7 @@ target_include_directories(py_matrix PRIVATE ${Python3_INCLUDE_DIRS})
 set_target_properties(py_matrix PROPERTIES PREFIX "" OUTPUT_NAME "py_matrix${CMAKE_SHARED_LIBRARY_SUFFIX}" SUFFIX "" LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 if(CUDA_FOUND)
-    # target_include_directories(py_matrix PRIVATE ${CUDA_INCLUDE_DIRS})
+    target_include_directories(py_matrix PRIVATE ${CUDA_INCLUDE_DIRS})
     target_link_libraries(py_matrix PRIVATE ${CUDA_LIBRARIES})
     set_target_properties(py_matrix PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 endif()
