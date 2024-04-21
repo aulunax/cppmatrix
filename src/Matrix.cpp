@@ -112,6 +112,8 @@ Matrix<T>::Matrix(Matrix&& other)
 template <typename T>
 void Matrix<T>::print()
 {
+	
+
 	if (size == Dimensions{0,0}) {
 		std::cout << "Uninitialized Matrix\n\n";
 		return;
@@ -630,7 +632,6 @@ Matrix<T> Matrix<T>::operator|(const Matrix &other) const
 	auto startTime = std::chrono::high_resolution_clock::now();
 #endif
 
-
 	// check if it is a triangular matrix
 	bool tril = isTril();
 	bool triu = isTriu();
@@ -687,6 +688,15 @@ T &Matrix<T>::operator[](Dimensions indecies)
 {
 	return rawData[indecies.n][indecies.m];
 }
+
+#ifdef CUDA_SUPPORTED
+template<typename T>
+__global__ void cudaKernel(T* data, int size) {
+    // CUDA kernel implementation
+}
+
+#endif
+
 
 template class Matrix<int>;
 template class Matrix<double>;

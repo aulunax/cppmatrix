@@ -9,6 +9,9 @@
 #define Duration(a) std::chrono::duration_cast<std::chrono::microseconds>(a)
 #endif
 
+
+
+
 class MatrixSizeDisparityException : public std::exception {
 public:
     virtual const char* what() const throw() {
@@ -170,4 +173,8 @@ public:
 
 };
 
+#ifdef CUDA_SUPPORTED
+template<typename T>
+__global__ void cudaKernel(T* data, int size);
+#endif
 

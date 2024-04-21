@@ -3,6 +3,8 @@
 
 int main() {
 
+
+
     Matrix<double> diag(3,3,3);
     diag = diag.diag();
     Matrix<double> diagInv = diag.inv();
