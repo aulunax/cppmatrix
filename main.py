@@ -6,7 +6,7 @@ from python.common import create_matrix
 from math import sin
 
 
-for num in [100, 200, 500]:
+for num in [100, 200, 500, 1000, 1500, 2000, 2500, 3000]:
     print("\nMatrix size: " + str(num) + "\n")
     N = num # 948
     a1, a2, a3 = 7, -1, -1

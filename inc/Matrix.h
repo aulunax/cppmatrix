@@ -44,7 +44,78 @@ public:
 template<typename T>
 class Matrix
 {
-	typedef std::vector<std::vector<T>> Data;
+
+	class Data {
+	private:
+		int rows;
+		int cols;
+		std::vector<T> data;
+
+	public:
+		Data() : rows(0), cols(0){}
+		Data(int rows, int cols) : rows(rows), cols(cols), data(rows * cols) {}
+		Data(int rows, int cols, T value) : rows(rows), cols(cols), data(rows * cols, value) {}
+
+
+		Data(const Data& other) : rows(other.rows), cols(other.cols), data(other.data) {}
+
+		Data(Data&& other) noexcept : rows(other.rows), cols(other.cols), data(std::move(other.data)) {
+			other.rows = 0;
+			other.cols = 0;
+		}
+
+		Data& operator=(const Data& other) {
+			if (this != &other) {
+				rows = other.rows;
+				cols = other.cols;
+				data = other.data;
+			}
+			return *this;
+		}
+
+		Data& operator=(Data&& other) noexcept {
+			if (this != &other) {
+				rows = other.rows;
+				cols = other.cols;
+				data = std::move(other.data);
+				other.rows = 0;
+				other.cols = 0;
+			}
+			return *this;
+		}
+
+		int numRows() const {
+			return rows;
+		}
+
+		int numCols() const {
+			return cols;
+		}
+
+		T& operator()(int i, int j) {
+			if (i < 0 || i >= rows || j < 0 || j >= cols) {
+				throw std::out_of_range("Index out of range");
+			}
+			return data[i * cols + j];
+		}
+
+		const T& operator()(int i, int j) const {
+			if (i < 0 || i >= rows || j < 0 || j >= cols) {
+				throw std::out_of_range("Index out of range");
+			}
+			return data[i * cols + j];
+		}
+
+		std::vector<T>& vec() {
+			return data;
+		}
+
+		const std::vector<T>& vec() const {
+			return data;
+		}
+
+	};
+	//typedef std::vector<std::vector<T>> Data;
 	typedef std::function<void(const Data&, const Data&, const Data&, Data&, int, int)> ThreadedFunction;
 
 	Dimensions size;
@@ -79,8 +150,8 @@ class Matrix
     static void divideByConstant(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 	// args contains k value of diag function
     static void getDiagonal(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
-	// args[0][0] contains k value of diag function
-	// args[0][1] contains direction of triangle
+	// args(0,0) contains k value of diag function
+	// args(0,1) contains direction of triangle
 	// direction: -1 means down, 1 means up 
     static void getTriangle(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 	static void getTransposed(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
@@ -125,6 +196,8 @@ public:
 	void print();
 	void reserve(int n, int m);
 	void fill(int n, int m, T value);
+	std::vector<T>& getDataVec() { return rawData.vec();}; 
+	const std::vector<T>& getDataVec() const { return rawData.vec(); };
 
 	// only implemented for diagonal matrices
 	Matrix inv() const;
@@ -161,7 +234,7 @@ public:
 		return false;
 		for (int i = 0; i < a.size.n; i++) {
 			for (int j = 0; j < a.size.m; j++) {
-				if (a.rawData[i][j] != b.rawData[i][j])
+				if (a.rawData(i,j) != b.rawData(i,j))
 					return false;
 		}
 	}

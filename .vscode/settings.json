@@ -67,6 +67,20 @@
         "variant": "cpp",
         "codecvt": "cpp",
         "complex": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "bitset": "cpp",
+        "__nullptr": "cpp",
+        "__bit_reference": "cpp",
+        "__debug": "cpp",
+        "__hash_table": "cpp",
+        "__locale": "cpp",
+        "__mutex_base": "cpp",
+        "__node_handle": "cpp",
+        "__split_buffer": "cpp",
+        "__threading_support": "cpp",
+        "ios": "cpp",
+        "locale": "cpp",
+        "queue": "cpp",
+        "__tree": "cpp"
     }
 }
