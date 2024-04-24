@@ -6,7 +6,15 @@
 #include <functional>
 
 #ifdef MATRIX_DEBUG
-#define Duration(a) std::chrono::duration_cast<std::chrono::microseconds>(a)
+	#include <chrono>
+	#define Duration(a) std::chrono::duration_cast<std::chrono::microseconds>(a)
+	#define MEASURE_TIME_START auto startTime = std::chrono::high_resolution_clock::now();
+	#define MEASURE_TIME_END auto endTime = std::chrono::high_resolution_clock::now(); \
+                        auto duration = Duration(endTime - startTime); \
+                        std::cout << __FUNCTION__ << " took " << duration.count()/1000.0 << " milliseconds\n";
+#else
+	#define MEASURE_TIME_START
+	#define MEASURE_TIME_END 
 #endif
 
 class MatrixSizeDisparityException : public std::exception {
@@ -41,7 +49,71 @@ public:
 template<typename T>
 class Matrix
 {
-	typedef std::vector<std::vector<T>> Data;
+	class Data {
+	private:
+		int rows;
+		int cols;
+		std::vector<T> data;
+
+	public:
+		Data() : rows(0), cols(0){}
+		Data(int rows, int cols) : rows(rows), cols(cols), data(rows * cols) {}
+		Data(int rows, int cols, T value) : rows(rows), cols(cols), data(rows * cols, value) {}
+		Data(const Data& other) : rows(other.rows), cols(other.cols), data(other.data) {}
+		Data(Data&& other) noexcept : rows(other.rows), cols(other.cols), data(std::move(other.data)) {
+			other.rows = 0;
+			other.cols = 0;
+		}
+
+		Data& operator=(const Data& other) {
+			if (this != &other) {
+				rows = other.rows;
+				cols = other.cols;
+				data = other.data;
+			}
+			return *this;
+		}
+
+		Data& operator=(Data&& other) noexcept {
+			if (this != &other) {
+				rows = other.rows;
+				cols = other.cols;
+				data = std::move(other.data);
+				other.rows = 0;
+				other.cols = 0;
+			}
+			return *this;
+		}
+
+		int numRows() const {
+			return rows;
+		}
+
+		int numCols() const {
+			return cols;
+		}
+
+		T& operator()(int i, int j) {
+			if (i < 0 || i >= rows || j < 0 || j >= cols)
+				throw std::out_of_range("Index out of range");
+			return data[i * cols + j];
+		}
+
+		const T& operator()(int i, int j) const {
+			if (i < 0 || i >= rows || j < 0 || j >= cols)
+				throw std::out_of_range("Index out of range");
+			return data[i * cols + j];
+		}
+
+		std::vector<T>& vec() {
+			return data;
+		}
+
+		const std::vector<T>& vec() const {
+			return data;
+		}
+	};
+
 	typedef std::function<void(const Data&, const Data&, const Data&, Data&, int, int)> ThreadedFunction;
 
 	Dimensions size;
@@ -54,7 +126,7 @@ class Matrix
 		auto result = std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
 		auto endTime = std::chrono::high_resolution_clock::now();
 		auto duration = Duration(endTime - startTime);
-		std::cout << "Function: " << functionName << "\nTime taken: " << duration.count()/1000.0 << " milliseconds" << std::endl;
+		std::cout << functionName << " took " << duration.count()/1000.0 << " milliseconds\n";
 		return result;
 	}
 	#else
@@ -76,8 +148,8 @@ class Matrix
     static void divideByConstant(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 	// args contains k value of diag function
     static void getDiagonal(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
-	// args[0][0] contains k value of diag function
-	// args[0][1] contains direction of triangle
+	// args(0,0) contains k value of diag function
+	// args(0,1) contains direction of triangle
 	// direction: -1 means down, 1 means up 
     static void getTriangle(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 	static void getTransposed(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
@@ -118,6 +190,9 @@ public:
 	Matrix(const Matrix& other);
 	Matrix(Matrix&& other);
 
+	T* getData() { return rawData.vec().data();}; 
+	const T* getData() const { return rawData.vec().data(); };
+
 	Dimensions getSize() const {return size;};
 	void print();
 	void reserve(int n, int m);
@@ -152,17 +227,19 @@ public:
 	Matrix operator|(const Matrix& other) const;
 
 	T& operator[](Dimensions indecies);
+	T& operator()(int i, int j) { return rawData(i,j); };
+	const T& operator()(int i, int j) const { return rawData(i,j); };
 
 	friend bool operator==(const Matrix<T>& a, const Matrix<T>& b) {
 		if (a.size != b.size)
 		return false;
 		for (int i = 0; i < a.size.n; i++) {
 			for (int j = 0; j < a.size.m; j++) {
-				if (a.rawData[i][j] != b.rawData[i][j])
+				if (a(i,j) != b(i,j))
 					return false;
+			}
 		}
-	}
-	return true;
+		return true;
 	}
 	friend bool operator!=(const Matrix<T>& a, const Matrix<T>& b) {
 		return !(a == b);

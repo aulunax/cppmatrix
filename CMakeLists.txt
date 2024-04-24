@@ -4,6 +4,9 @@ project(py_matrix VERSION 0.1.0 LANGUAGES C CXX)
 include(CTest)
 enable_testing()
 
+#add_compile_definitions(MATRIX_DEBUG)
+
+
 include_directories(inc)
 
 find_package(Python3 REQUIRED COMPONENTS Development)
@@ -17,6 +20,9 @@ target_compile_options(py_matrix PRIVATE -w -Wfatal-errors -O3 -Wall -std=c++17 
 target_include_directories(py_matrix PRIVATE ${Python3_INCLUDE_DIRS})
 
 set_target_properties(py_matrix PROPERTIES PREFIX "" OUTPUT_NAME "py_matrix${CMAKE_SHARED_LIBRARY_SUFFIX}" SUFFIX "" LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+add_executable(my_test src/main.cpp)
+target_link_libraries(my_test py_matrix)
 
 find_program(STUBGEN_EXECUTABLE
     NAMES stubgen

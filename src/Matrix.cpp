@@ -6,16 +6,12 @@
 #include <thread>
 #include <future>
 
-#ifdef MATRIX_DEBUG
-	#include <chrono>
-#endif
+
 
 template <typename T>
 Matrix<T>::Matrix(const std::string &content) : Matrix()
 {
-	#ifdef MATRIX_DEBUG
-		auto startTime = std::chrono::high_resolution_clock::now();
-	#endif
+MEASURE_TIME_START
 	std::istringstream contentStream(content);
 	std::string rowStr;
 	int m=0,n=0;
@@ -45,7 +41,7 @@ Matrix<T>::Matrix(const std::string &content) : Matrix()
 				std::istringstream numberStream(cell);
 				T value;
 				numberStream >> value;
-				rawData[i][j] = value;
+				rawData(i,j) = value;
 				j++;
 			}
 		}));
@@ -56,11 +52,7 @@ Matrix<T>::Matrix(const std::string &content) : Matrix()
         future.wait();
     }
 
-	#ifdef MATRIX_DEBUG
-		auto endTime = std::chrono::high_resolution_clock::now();
-    	auto duration = Duration(endTime - startTime);
-		std::cout << "Matrix(const std::string &content) finished in " << duration.count()/1000.0 << " miliseconds.\n\n";
-	#endif
+MEASURE_TIME_END
 }
 
 template <typename T>
@@ -91,11 +83,7 @@ Matrix<T>::Matrix(const Matrix& other)
 {
 	reserve(other.size.n, other.size.m);
     if (this != &other) {
-		int i = 0;
-		for (const auto& row : other.rawData) {
-       		rawData[i] = row;
-			i++;
-    	}
+		rawData = other.rawData;
     }
 }
 
@@ -117,10 +105,9 @@ void Matrix<T>::print()
 		return;
 	}
 
-
-	for (const auto& row : rawData) {
-		for (const auto& elem : row) {
-			std::cout << elem << ' ';
+	for (int i = 0; i < size.n; i++) {
+		for (int j = 0; j < size.m; j++) {
+			std::cout << rawData(i,j) << ' ';
 		}
 		std::cout << '\n';
 	}
@@ -130,15 +117,17 @@ void Matrix<T>::print()
 template <typename T>
 void Matrix<T>::reserve(int n, int m)
 {
+MEASURE_TIME_START
 	size = {n,m};
-	rawData = Data(n, std::vector<T>(m));
+	rawData = Data(n, m);
+MEASURE_TIME_END
 }
 
 template <typename T>
 void Matrix<T>::fill(int n, int m, T value)
 {
 	size = {n,m};
-	rawData = Data(n, std::vector<T>(m, value));
+	rawData = Data(n, m, value);
 }
 
 template <typename T>
@@ -147,20 +136,17 @@ Matrix<T> Matrix<T>::inv() const
 	if (size.n != size.m)
 		throw MatrixSizeDisparityException();
 
-#ifdef MATRIX_DEBUG
-	auto startTime = std::chrono::high_resolution_clock::now();
-#endif
+MEASURE_TIME_START
 	bool isDiagonal = true;
 	for (int i = 0; i < size.n; i++) {
 		for (int j = 0; j < size.m; j++) {
-			if (i != j && rawData[i][j] != 0) {
+			if (i != j && rawData(i,j) != 0) {
 				isDiagonal = false;
 				break;
 			}
-			if (i == j && rawData[i][j] == 0) {
+			if (i == j && rawData(i,j) == 0) {
 				throw MatrixNotInvertible();
-			}
-				
+			}		
 		}
 		if (!isDiagonal)
 			break;
@@ -169,14 +155,10 @@ Matrix<T> Matrix<T>::inv() const
 	Matrix<T> result(size, 0);
 	if (isDiagonal) {
 		for (int i = 0; i < size.n; i++) {
-			result.rawData[i][i] = 1/rawData[i][i];
+			result(i,i) = 1/rawData(i,i);
 		}
 	}
-#ifdef MATRIX_DEBUG
-	auto endTime = std::chrono::high_resolution_clock::now();
-	auto duration = Duration(endTime - startTime);
-	std::cout << "Function: inv()\nTime taken: " << duration.count()/1000.0 << " milliseconds" << std::endl;
-#endif
+MEASURE_TIME_END
     return result;
 }
 
@@ -186,10 +168,19 @@ Matrix<T> Matrix<T>::diag(int k) const
 	if (size.m != size.n) {
 		throw NotSquareMatrixException();
 	}
-
-	Matrix<T> args = Matrix<T>(1, 1, k);
-	Matrix<T> other;
-	return returnTypeFunctionWrapper("diag(int k)", &Matrix::threadedMatrixOperation, this, args, other, &Matrix::getDiagonal, Dimensions{0,0});
+MEASURE_TIME_START
+	Matrix<T> d(size, 0); 
+	int absK = abs(k);
+	int startRow = k < 0 ? absK : 0;
+	int startCol = k > 0 ? absK : 0;
+	for (int j = 0; j+absK < size.m ; j++) {
+		d(j+startRow,j+startCol) = rawData(j+startRow,j+startCol);
+	}
+MEASURE_TIME_END
+	return d;
+	// Matrix<T> args = Matrix<T>(1, 1, k);
+	// Matrix<T> other;
+	// return returnTypeFunctionWrapper("diag(int k)", &Matrix::threadedMatrixOperation, this, args, other, &Matrix::getDiagonal, Dimensions{0,0});
 
 	//return threadedMatrixOperation(args, other, &getDiagonal);
 }
@@ -197,13 +188,13 @@ Matrix<T> Matrix<T>::diag(int k) const
 template <typename T>
 void Matrix<T>::getDiagonal(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow)
 {
-	int diagonal = args[0][0];
+	int diagonal = args(0,0);
 	for (int i = startRow; i < endRow; i++) {
-		for (int j = 0; j < data1[0].size(); j++) {
+		for (int j = 0; j < data1.numCols(); j++) {
 			if (i+diagonal == j) 
-				result[i][j] = data1[i][j];
+				result(i,j) = data1(i,j);
 			else
-				result[i][j] = 0;
+				result(i,j) = 0;
 		}
 	}
 }
@@ -216,8 +207,8 @@ Matrix<T> Matrix<T>::tril(int k) const
 	}
 
     Matrix<T> args = Matrix<T>(1,2);
-	args[{0,0}] = k;
-	args[{0,1}] = -1;
+	args(0,0) = k;
+	args(0,1) = -1;
 
 	Matrix<T> other;
 	return returnTypeFunctionWrapper("tril(int k)", &Matrix::threadedMatrixOperation, this, args, other, &Matrix::getTriangle, Dimensions{0,0});
@@ -233,8 +224,8 @@ Matrix<T> Matrix<T>::triu(int k) const
 	}
 
     Matrix<T> args = Matrix<T>(1,2);
-	args[{0,0}] = k;
-	args[{0,1}] = 1;
+	args(0,0) = k;
+	args(0,1) = 1;
 
 	Matrix<T> other;
 	return returnTypeFunctionWrapper("triu(int k) ", &Matrix::threadedMatrixOperation, this, args, other, &Matrix::getTriangle, Dimensions{0,0});
@@ -246,8 +237,8 @@ template <typename T>
 void Matrix<T>::getTransposed(const Data &args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow)
 {
 	for (int i = startRow; i < endRow; ++i) {
-        for (int j = 0; j < data1[0].size(); ++j) {
-            result[j][i] = data1[i][j];
+        for (int j = 0; j < data1.numCols(); ++j) {
+            result(j,i) = data1(i,j);
         }
     }
 }
@@ -265,14 +256,14 @@ Matrix<T> Matrix<T>::transpose() const
 template <typename T>
 void Matrix<T>::getTriangle(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow)
 {
-	int direction = args[0][1];
-	int k = args[0][0];
+	int direction = args(0,1);
+	int k = args(0,0);
 	for (int i = startRow; i < endRow; i++) {
-		for (int j = 0; j < data1[0].size(); j++) {
+		for (int j = 0; j < data1.numCols(); j++) {
 			if (direction == 1 ? i+k <= j : i+k>=j) 
-				result[i][j] = data1[i][j];
+				result(i,j) = data1(i,j);
 			else
-				result[i][j] = 0;
+				result(i,j) = 0;
 		}
 	}
 }
@@ -283,11 +274,7 @@ template<typename T>
 Matrix<T>& Matrix<T>::operator=(const Matrix& other) {
 	reserve(other.size.n, other.size.m);
     if (this != &other) {
-		int i = 0;
-		for (const auto& row : other.rawData) {
-       		rawData[i] = row;
-			i++;
-    	}
+		rawData = other.rawData;
     }
     return *this;
 }
@@ -305,8 +292,8 @@ template <typename T>
 void Matrix<T>::fillWithValue(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow)
 {
 	for (int i = startRow; i < endRow; i++) {
-		for (int j = 0; j < result[0].size(); j++) {
-			result[i][j] = data2[0][0];
+		for (int j = 0; j < result.numCols(); j++) {
+			result(i,j) = data2(0,0);
 		}
 	}
 }
@@ -315,8 +302,8 @@ template <typename T>
 void Matrix<T>::addMatrices(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow)
 {
     for (int i = startRow; i < endRow; i++) {
-		for (int j = 0; j < data1[0].size(); j++) {
-			result[i][j] = data1[i][j] + data2[i][j];
+		for (int j = 0; j < data1.numCols(); j++) {
+			result(i,j) = data1(i,j) + data2(i,j);
 		}
 	}
 }
@@ -324,8 +311,8 @@ void Matrix<T>::addMatrices(const Data& args, const Data &data1, const Data &dat
 template<typename T>
 void Matrix<T>::substractMatrices(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow) {
 	for (int i = startRow; i < endRow; i++) {
-		for (int j = 0; j < data1[0].size(); j++) {
-			result[i][j] = data1[i][j] - data2[i][j];
+		for (int j = 0; j < data1.numCols(); j++) {
+			result(i,j) = data1(i,j) - data2(i,j);
 		}
 	}
 }
@@ -333,9 +320,9 @@ void Matrix<T>::substractMatrices(const Data& args, const Data& data1, const Dat
 template<typename T>
 void Matrix<T>::multiplyMatrices(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow) {
 	for (int i = startRow; i < endRow; i++) {
-		for (int j = 0; j < data2[0].size(); j++) {
-			for (int k = 0; k < data1[0].size(); k++) {
-				result[i][j] += data1[i][k] * data2[k][j];
+		for (int j = 0; j < data2.numCols(); j++) {
+			for (int k = 0; k < data1.numCols(); k++) {
+				result(i,j) += data1(i,k) * data2(k,j);
 			}
 		}
 	}
@@ -344,8 +331,8 @@ void Matrix<T>::multiplyMatrices(const Data& args, const Data& data1, const Data
 template<typename T>
 void Matrix<T>::multiplyByConstant(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow) {
 	for (int i = startRow; i < endRow; i++) {
-		for (int j = 0; j < data1[0].size(); j++) {
-			result[i][j] = data1[i][j] * args[0][0];
+		for (int j = 0; j < data1.numCols(); j++) {
+			result(i,j) = data1(i,j) * args(0,0);
 		}
 	}
 }
@@ -353,8 +340,8 @@ void Matrix<T>::multiplyByConstant(const Data& args, const Data& data1, const Da
 template<typename T>
 void Matrix<T>::divideByConstant(const Data& args, const Data& data1, const Data& data2, Data& result, int startRow, int endRow) {
 	for (int i = startRow; i < endRow; i++) {
-		for (int j = 0; j < data1[0].size(); j++) {
-			result[i][j] = data1[i][j] / args[0][0];
+		for (int j = 0; j < data1.numCols(); j++) {
+			result(i,j) = data1(i,j) / args(0,0);
 		}
 	}
 }
@@ -449,7 +436,6 @@ Matrix<T> Matrix<T>::operator/(const T& value) const
 	Matrix<T> args = Matrix<T>(1, 1, value);
 	Matrix<T> other;
 	return returnTypeFunctionWrapper("operator/(const T& value)", &Matrix::threadedMatrixOperation, this, args, other, &Matrix::divideByConstant, Dimensions{0,0});
-
 	//return threadedMatrixOperation(args, other, &divideByConstant);
 }
 
@@ -460,60 +446,13 @@ Matrix<T> Matrix<T>::operator-() const
 }
 
 template <typename T>
-Matrix<T> Matrix<T>::gaussianElimination(const Matrix &A, const Matrix &b)
-{
-	if (A.size.n != b.size.n || b.size.m != 1) {
-		throw MatrixSizeDisparityException();
-	}
-
-	Matrix<T> Ab(A.size.n, A.size.m+1);
-	for (int i = 0; i < A.size.n; i++) {
-		for (int j = 0; j < A.size.m; j++) {
-			Ab.rawData[i][j] = A.rawData[i][j];	
-		}
-		Ab.rawData[i][A.size.m] = b.rawData[i][0];	
-	}
-
-
-	int h = 0;
-	int k = 0;
-
-	while (h < Ab.size.n && k < Ab.size.m) {
-		int valMax = abs(Ab[{h,k}]);
-		int iMax = h;
-		for (int i = h; i < Ab.size.n; i++) {
-			if (abs(Ab[{i, k}]) > valMax) {
-				valMax = abs(Ab[{i, k}]);
-				iMax = i;
-			}
-		}
-
-		if (Ab[{iMax, k}] == 0)
-        	k += 1;
-		else {
-			std::swap(Ab.rawData[h], Ab.rawData[iMax]);
-			for (int i = h+1; i < Ab.size.n; i++) {
-				T f = Ab[{i, k}] / Ab[{h, k}];
-				Ab[{i, k}] = 0;
-				for (int j = k+1; j < Ab.size.m; j++) {
-					Ab[{i, j}] = Ab[{i, j}] - Ab[{h, j}] * f;
-				}
-			}
-			h += 1;
-			k += 1;
-		}
-	}
-    return Ab;
-}
-
-template <typename T>
 bool Matrix<T>::HasUniqueSolution() const
 {
 	int ranks = 0;
 	for (int i = 0; i < size.n; i++) {
 		bool zeros = true;
 		for (int j = 0; j < size.m; j++) {
-			if (rawData[i][j] != 0) {
+			if (rawData(i,j) != 0) {
 				zeros = false;
 				break;
 			}
@@ -529,43 +468,27 @@ bool Matrix<T>::HasUniqueSolution() const
 template <typename T>
 bool Matrix<T>::isTril() const
 {
-    bool isTril = true;
 	for (int i = 0; i < size.n; i++) {
-		for (int j = 0; j < size.m; j++) {
-			if (i < j && rawData[i][j] != 0) {
-				isTril = false;
-				break;
+		for (int j = i+1; j < size.m; j++) {
+			if (rawData(i,j) != 0) {
+				return false;
 			}
-			if (i == j && rawData[i][j] == 0) {
-				throw MatrixNotInvertible();
-			}
-				
 		}
-		if (!isTril)
-			break;
 	}
-	return isTril;
+	return true;
 }
 
 template <typename T>
 bool Matrix<T>::isTriu() const
 {
-    bool isTriu = true;
-	for (int i = 0; i < size.n; i++) {
-		for (int j = 0; j < size.m; j++) {
-			if (i < j && rawData[i][j] != 0) {
-				isTriu = false;
-				break;
+   for (int i = 0; i < size.n; i++) {
+		for (int j = 0; j < i; j++) {
+			if (rawData(i,j) != 0) {
+				return false;
 			}
-			if (i == j && rawData[i][j] == 0) {
-				throw MatrixNotInvertible();
-			}
-				
 		}
-		if (!isTriu)
-			break;
 	}
-	return isTriu;
+	return true;
 }
 
 template <typename T>
@@ -574,15 +497,15 @@ Matrix<T> Matrix<T>::backSubstitution(const Matrix &b) const
 	Matrix<T> x(size.n, 1);
 
     for (int i = size.n - 1; i >= 0; i--) {
-        x[{i,0}] = b.rawData[i][0];
+        x(i,0) = b(i,0);
 
         // Subtract the contributions of already solved variables
         for (int j = i + 1; j < size.n; j++) {
-            x[{i,0}] -= rawData[i][j] * x[{j,0}];
+            x(i,0) -= rawData(i,j) * x(j,0);
         }
 
         // Divide by the diagonal element
-        x[{i,0}] /= rawData[i][i];
+        x(i,0) /= rawData(i,i);
     }
     return x;
 }
@@ -593,15 +516,15 @@ Matrix<T> Matrix<T>::forwardSubstitution(const Matrix &b) const
 	Matrix<T> x(size.n, 1);
 
 	for (int i = 0; i < size.n; i++) {
-		x[{i,0}] = b.rawData[i][0];
+		x(i,0) = b(i,0);
 
 		// Subtract the contributions of already solved variables
 		for (int j = 0; j < i; j++) {
-			x[{i,0}] -= rawData[i][j] * x[{j,0}];
+			x(i,0) -= rawData(i,j) * x(j,0);
 		}
 
 		// Divide by the diagonal element
-		x[{i,0}] /= rawData[i][i];
+		x(i,0) /= rawData(i,i);
 	}
     return x;
 }
@@ -609,9 +532,7 @@ Matrix<T> Matrix<T>::forwardSubstitution(const Matrix &b) const
 template <typename T>
 Matrix<T> Matrix<T>::operator/(const Matrix &other) const
 {
-#ifdef MATRIX_DEBUG
-	std::cout << "Starting Matrix<T>::operator/(const Matrix &other)\n\n";
-#endif
+MEASURE_TIME_START
 
 	// transpose xA = b into  A^T * x^T = b^t
 	// and perform left division
@@ -625,12 +546,7 @@ template <typename T>
 Matrix<T> Matrix<T>::operator|(const Matrix &other) const
 {
 
-#ifdef MATRIX_DEBUG
-	std::cout << "Starting Matrix<T>::operator|(const Matrix &other)\n\n";
-	auto startTime = std::chrono::high_resolution_clock::now();
-#endif
-
-
+MEASURE_TIME_START
 	// check if it is a triangular matrix
 	bool tril = isTril();
 	bool triu = isTriu();
@@ -649,21 +565,13 @@ Matrix<T> Matrix<T>::operator|(const Matrix &other) const
 	// case 3: is not triangular matrix
 	// https://en.wikipedia.org/wiki/LU_decomposition#MATLAB_code_example
 	else {
-		// Matrix<T> gaussianResult = gaussianElimination((*this), other);
-		// if (!gaussianResult.HasUniqueSolution())
-		// 	throw MatrixEquationNoUniqueSolutionException();
-		// Matrix<T> b(size.n,1);
-		// for (int i = 0; i < size.n; i++)
-		// 	b[{i,0}] = gaussianResult[{i,size.n}];
-		// x = std::move(gaussianResult.backSubstitution(b));
-
 		Matrix<T> U = (*this);
 		Matrix<T> L = Matrix<T>(size,1).diag();
 		for(int i = 1; i < size.n; i++) {
 			for(int j = 0; j < i; j++) {
-				L[{i,j}] = U[{i,j}] / U[{j,j}];
+				L(i,j) = U(i,j) / U(j,j);
 				for(int k = 0; k < size.n; k++) {
-					U[{i,k}] = U[{i,k}] - L[{i,j}]*U[{j,k}];
+					U(i,k) = U(i,k) - L(i,j)*U(j,k);
 				}
 			}
 		}
@@ -674,18 +582,14 @@ Matrix<T> Matrix<T>::operator|(const Matrix &other) const
 		x = U.backSubstitution(y);
 	}
 
-#ifdef MATRIX_DEBUG
-	auto endTime = std::chrono::high_resolution_clock::now();
-	auto duration = Duration(endTime - startTime);
-	std::cout << "Matrix<T>::operator|(const Matrix &other) finished in " << duration.count()/1000.0 << " miliseconds.\n\n";
-#endif
+MEASURE_TIME_END
 	return x;
 }
 
 template <typename T>
 T &Matrix<T>::operator[](Dimensions indecies)
 {
-	return rawData[indecies.n][indecies.m];
+	return rawData(indecies.n,indecies.m);
 }
 
 template class Matrix<int>;
