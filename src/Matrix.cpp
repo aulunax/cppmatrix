@@ -126,8 +126,10 @@ MEASURE_TIME_END
 template <typename T>
 void Matrix<T>::fill(int n, int m, T value)
 {
+MEASURE_TIME_START
 	size = {n,m};
 	rawData = Data(n, m, value);
+MEASURE_TIME_END
 }
 
 template <typename T>
@@ -361,7 +363,7 @@ Matrix<T> Matrix<T>::threadedMatrixOperation(const Matrix& args, const Matrix& o
 	int numOfThreads = (int)std::thread::hardware_concurrency();
 
 	// if matrix has only few rows, don't multithread
-	if (size.n > numOfThreads*2) {
+	if (size.n > numOfThreads*2 && size.m > 1) {
 
 		int rowsPerThread = size.n / numOfThreads;
 
@@ -390,6 +392,17 @@ Matrix<T> Matrix<T>::operator+(const Matrix& other) const
 		throw MatrixSizeDisparityException();
 	}
 	Matrix<T> args;
+// MEASURE_TIME_START
+// 	Matrix<T> result(size);
+
+// 	//#pragma omp parallel for
+// 	for (int i = 0; i < size.n; i++) {
+// 		for (int j = 0; j < size.m; j++) {
+// 			result(i,j) = rawData(i,j) + other(i,j);
+// 		}
+// 	}
+// MEASURE_TIME_END
+// 	return result;
 
 	return returnTypeFunctionWrapper("operator+(const Matrix& other)", &Matrix::threadedMatrixOperation, this, args, other, &Matrix::addMatrices, Dimensions{0,0});
 	//return threadedMatrixOperation(args, other, &addMatrices);
@@ -468,26 +481,32 @@ bool Matrix<T>::HasUniqueSolution() const
 template <typename T>
 bool Matrix<T>::isTril() const
 {
+MEASURE_TIME_START
 	for (int i = 0; i < size.n; i++) {
 		for (int j = i+1; j < size.m; j++) {
 			if (rawData(i,j) != 0) {
+				MEASURE_TIME_END
 				return false;
 			}
 		}
 	}
+MEASURE_TIME_END
 	return true;
 }
 
 template <typename T>
 bool Matrix<T>::isTriu() const
 {
+MEASURE_TIME_START
    for (int i = 0; i < size.n; i++) {
 		for (int j = 0; j < i; j++) {
 			if (rawData(i,j) != 0) {
+				MEASURE_TIME_END
 				return false;
 			}
 		}
 	}
+MEASURE_TIME_END
 	return true;
 }
 
@@ -545,7 +564,9 @@ MEASURE_TIME_START
 template <typename T>
 Matrix<T> Matrix<T>::operator|(const Matrix &other) const
 {
-
+#ifdef MATRIX_DEBUG
+	std::cout<<"operator| starts\n";
+#endif
 MEASURE_TIME_START
 	// check if it is a triangular matrix
 	bool tril = isTril();
@@ -556,11 +577,11 @@ MEASURE_TIME_START
 
 	// case 1: is lower triangular matrix
 	if (tril) {
-		x = std::move(forwardSubstitution(other));
+		x = forwardSubstitution(other);
 	}
-	// case 1: is upper triangular matrix
+	// case 2: is upper triangular matrix
 	else if (triu) {
-		x = std::move(backSubstitution(other));
+		x = backSubstitution(other);
 	}
 	// case 3: is not triangular matrix
 	// https://en.wikipedia.org/wiki/LU_decomposition#MATLAB_code_example

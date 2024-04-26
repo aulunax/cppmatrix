@@ -4,8 +4,9 @@ project(py_matrix VERSION 0.1.0 LANGUAGES C CXX)
 include(CTest)
 enable_testing()
 
-#add_compile_definitions(MATRIX_DEBUG)
-
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(MATRIX_DEBUG)
+endif()
 
 include_directories(inc)
 
