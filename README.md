@@ -1,6 +1,6 @@
 # PyMatrix
 ## Prerequisites
-- cpyhton3.6 or higher (also python-dev and mypy are required) 
+- cpyhton3.6 or higher (also python-dev is required) 
 - g++ with c++17 support
 - CMake
 ## Instruction
