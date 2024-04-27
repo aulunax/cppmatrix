@@ -45,6 +45,14 @@ public:
 	}
 };
 
+class UninitializedMatrixAccess : public std::exception {
+public:
+	virtual const char* what() const throw() {
+		return "Trying to access data from uninitialized matrix";
+	}
+};
+
+
 
 template<typename T>
 class Matrix
@@ -136,7 +144,6 @@ class Matrix
 	}
 #endif
 
-
 	// unused
     static void fillWithValue(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow);
 
@@ -193,7 +200,7 @@ public:
 	T* getData() { return rawData.vec().data();}; 
 	const T* getData() const { return rawData.vec().data(); };
 
-	Dimensions getSize() const {return size;};
+	Dimensions getSize() const { return size;};
 	void print();
 	void reserve(int n, int m);
 	void fill(int n, int m, T value);

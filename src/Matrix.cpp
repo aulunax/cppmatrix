@@ -93,6 +93,7 @@ Matrix<T>::Matrix(Matrix&& other)
 {
 	size = other.size;
     if (this != &other) {
+		other.size = Dimensions{0,0};
         rawData = std::move(other.rawData);
     }
 }
@@ -285,13 +286,15 @@ template<typename T>
 Matrix<T>& Matrix<T>::operator=(Matrix&& other) noexcept {
 	size = other.size;
     if (this != &other) {
+		other.size = Dimensions{0,0};
         rawData = std::move(other.rawData);
     }
     return *this;
 }
 
+
 template <typename T>
-void Matrix<T>::fillWithValue(const Data& args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow)
+void Matrix<T>::fillWithValue(const Data &args, const Data &data1, const Data &data2, Data &result, int startRow, int endRow)
 {
 	for (int i = startRow; i < endRow; i++) {
 		for (int j = 0; j < result.numCols(); j++) {
@@ -392,17 +395,6 @@ Matrix<T> Matrix<T>::operator+(const Matrix& other) const
 		throw MatrixSizeDisparityException();
 	}
 	Matrix<T> args;
-// MEASURE_TIME_START
-// 	Matrix<T> result(size);
-
-// 	//#pragma omp parallel for
-// 	for (int i = 0; i < size.n; i++) {
-// 		for (int j = 0; j < size.m; j++) {
-// 			result(i,j) = rawData(i,j) + other(i,j);
-// 		}
-// 	}
-// MEASURE_TIME_END
-// 	return result;
 
 	return returnTypeFunctionWrapper("operator+(const Matrix& other)", &Matrix::threadedMatrixOperation, this, args, other, &Matrix::addMatrices, Dimensions{0,0});
 	//return threadedMatrixOperation(args, other, &addMatrices);

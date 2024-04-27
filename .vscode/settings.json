@@ -67,6 +67,7 @@
         "variant": "cpp",
         "codecvt": "cpp",
         "complex": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "any": "cpp"
     }
 }
