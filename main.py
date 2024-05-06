@@ -9,7 +9,7 @@ from math import sin
 for num in [100, 200, 500, 1000, 1500]:
     print("\nMatrix size: " + str(num) + "\n")
     N = num # 948
-    a1, a2, a3 = 7, -1, -1
+    a1, a2, a3 = 3, -1, -1
 
     A = create_matrix(N,a1,a2,a3)
 
@@ -29,6 +29,7 @@ for num in [100, 200, 500, 1000, 1500]:
     print("time_taken: " + str(time_taken))
     print("err_norm: " + str(err_norms))
 
-    x, time_taken = direct_method(A, b)
+    x, err_norms, time_taken = direct_method(A, b)
     print("Direct method:")
     print("time_taken: " + str(time_taken))
+    print("err_norm: " + str(err_norms))

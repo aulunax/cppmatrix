@@ -68,6 +68,8 @@
         "codecvt": "cpp",
         "complex": "cpp",
         "iomanip": "cpp",
-        "any": "cpp"
+        "any": "cpp",
+        "queue": "cpp",
+        "fstream": "cpp"
     }
 }
