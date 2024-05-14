@@ -1,6 +1,6 @@
 # Fdb version 4
-["pdflatex"] 1715645278.98436 "/mnt/c/Users/kamil/source/repos/Matrix/Matrix/tex/tex.tex" "tex.pdf" "tex" 1715645279.34013 0
-  "/mnt/c/Users/kamil/source/repos/Matrix/Matrix/tex/tex.tex" 1715645277.49735 624 07e2fec2ee0eccb6ac9a78f77d065e0c ""
+["pdflatex"] 1715653808.29709 "/mnt/c/Users/kamil/source/repos/Matrix/Matrix/tex/tex.tex" "tex.pdf" "tex" 1715653808.60314 0
+  "/mnt/c/Users/kamil/source/repos/Matrix/Matrix/tex/tex.tex" 1715653807.17639 626 7a750551c1d9d2d750d84b64f684ca38 ""
   "/usr/local/texlive/2024/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/local/texlive/2024/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
   "/usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb" 1248133631 30251 6afa5cb1d0204815a708a080681d4674 ""
@@ -21,8 +21,8 @@
   "/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map" 1715637777 5483668 9e45798515b35c9eab0413928a3e8881 ""
   "/usr/local/texlive/2024/texmf-var/web2c/pdftex/pdflatex.fmt" 1715637868 8225182 9cd783bca97c830ed9354edd813df6db ""
   "/usr/local/texlive/2024/texmf.cnf" 1715637774.43712 455 5b996dcaa0eb4ef14a83b026bc0a008c ""
-  "tex.aux" 1715645279.29868 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
-  "tex.tex" 1715645277.49735 624 07e2fec2ee0eccb6ac9a78f77d065e0c ""
+  "tex.aux" 1715653808.56401 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
+  "tex.tex" 1715653807.17639 626 7a750551c1d9d2d750d84b64f684ca38 ""
   (generated)
   "tex.aux"
   "tex.log"
