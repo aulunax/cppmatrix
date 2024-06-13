@@ -79,5 +79,34 @@ PYBIND11_MODULE(py_matrix, m) {
             Dimensions size = obj.getSize();
             return std::tuple<int, int>(size.n, size.m);
         })
+        .def("to_list", [](const Matrix<double> &self) {
+            py::list result;
+            Dimensions size = self.getSize();
+            for (int i = 0; i < size.n; ++i) {
+                py::list row;
+                for (int j = 0; j < size.m; ++j) {
+                    row.append(self(i, j));
+                }
+                result.append(row);
+            }
+            return result;
+        })
+        .def("from_list", [](Matrix<double> &self, const py::list &input_list) {
+            int rows = py::len(input_list);
+            if (rows == 0) return;
+
+            int cols = py::len(input_list[0]);
+            self = Matrix<double>(rows, cols);
+
+            for (int i = 0; i < rows; ++i) {
+                py::list row = input_list[i];
+                if (py::len(row) != cols) {
+                    throw MatrixSizeDisparityException();
+                }
+                for (int j = 0; j < cols; ++j) {
+                    self(i, j) = py::cast<double>(row[j]);
+                }
+            }
+        })
 ;
 }

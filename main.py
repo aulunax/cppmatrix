@@ -6,7 +6,6 @@ from python.gauss_seidel import gauss_seidel_iter_method
 from python.common import create_matrix
 from math import sin
 import matplotlib.pyplot as plt
-import numpy as np
 
 # ZADANIE A,B
 a1, a2, a3 = 7, -1, -1
